@@ -5,3 +5,9 @@ struct CPU{
     //16 V registers
     let V[u16, 0xF];
 }
+
+impl CPU {
+    fn executeNextInstruction() {
+       memory[++PC];
+    }
+}

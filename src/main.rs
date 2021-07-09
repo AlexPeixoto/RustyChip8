@@ -13,7 +13,7 @@ mod memory;
     window::{ContextSettings, Event, Key, Style},
 };*/
 use sfml::window::{ContextSettings, Event, Style};
-use sfml::graphics::{RenderWindow};
+use sfml::graphics::RenderWindow;
 
 fn main() {
     let mut window = RenderWindow::new(
