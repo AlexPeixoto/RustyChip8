@@ -13,7 +13,12 @@ struct CPU {
 
 impl CPU {
     fn getValFromOpCode(opCode : u16, pos : u8) {
-        return (opCode >> (pos * 8)) & 0xF; 
+        opCode >> (pos * 8) & 0xF; 
+    }
+
+    fn pushPCtoStack(&mut self) {
+        self.memory[self.SP] = self.PC;
+        self.SP += 1;
     }
 
     fn executeNextInstruction(&mut self) {
@@ -31,19 +36,19 @@ impl CPU {
         // the above ones can be defined
         // by its first byte.
         let firstByte:u8 = opCode >> 24;
-        let reg_2 = self.V[getValFromOpCode(opCode, 2)];
+
+        let reg_2 = self.V[CPU::getValFromOpCode(opCode, 2)];
 
         match firstByte {
-            0x1 => PC = opCode & 0x0FFF,
+            0x1 => self.PC = opCode & 0x0FFF,
             0x2 => {
-                self.memory[SP] = PC;
-                self.SP+=1;
+                self.pushPCtoStack();
                 self.PC = opCode & 0x0FFF;
             },
             0x3 => {
                 let value = opCode & 0xFF;
                 if reg_2 == value {
-                    PC+= 2;
+                    self.PC += 1;
                 }
             },
             0x4 => {
@@ -53,24 +58,24 @@ impl CPU {
                 }
             },
             0x5 => {
-                let regs = (getValFromOpCode(opCode, 1),
-                            getValFromOpCode(opCode, 2));
+                let regs = (CPU::getValFromOpCode(opCode, 1),
+                            CPU::getValFromOpCode(opCode, 2));
                 if self.V[regs.0] == self.V[regs.1] {
                     self.PC += 1;
                 }
             },
             0x6 => {
-                let reg = getValFromOpCode(opCode, 2);
+                let reg = CPU::getValFromOpCode(opCode, 2);
                 let value = opCode & 0xFF;
                 self.V[reg] = value;
             },
             0x7 => {
-                let reg = getValFromOpCode(opCode, 2);
+                let reg = CPU::getValFromOpCode(opCode, 2);
                 let value = opCode & 0xFF;
                 self.V[reg] += value;
             },
             0x8 => {
-                executeInstrOp8(opCode);
+                self.executeInstrOp8(self, opCode);
             },
             _ => {
                 println!("Invalid instruction");
@@ -79,19 +84,19 @@ impl CPU {
         }
         self.PC += 1;
     }
-    fn executeInstrOp8(opCode:u16) {
-        let op8 = getValFromOpCode(opCode, 0);
-        let regs = (getValFromOpCode(opCode, 1),
-        getValFromOpCode(opCode, 2));
+    fn executeInstrOp8(&mut self, opCode:u16) {
+        let op8 = CPU::getValFromOpCode(opCode, 0);
+        let regs = (CPU::getValFromOpCode(opCode, 1),
+        CPU::getValFromOpCode(opCode, 2));
         match op8 {
-            0x0 => V[regs.0] = V[regs.1],
-            0x1 => V[regs.0] = V[regs.0] | V[regs.1],
-            0x2 => V[regs.0] = V[regs.0] & V[regs.1],
-            0x3 => V[regs.0] = V[regs.0] ^ V[regs.1],
+            0x0 => self.V[regs.0] = self.V[regs.1],
+            0x1 => self.V[regs.0] = self.V[regs.0] | self.V[regs.1],
+            0x2 => self.V[regs.0] = self.V[regs.0] & self.V[regs.1],
+            0x3 => self.V[regs.0] = self.V[regs.0] ^ self.V[regs.1],
             0x4 => {
-                let tmpSum:u32 = V[regs.0] + V[regs.1];
-                V[0xF] = (tmpSum > 0xFF);
-                V[regs.0] = tmpSum as u8;
+                let tmpSum:u32 = self.V[regs.0] + self.V[regs.1];
+                self.V[0xF] = tmpSum > 0xFF;
+                self.V[regs.0] = tmpSum as u8;
             },
             _ => {
                 println!("Invalid instruction");
