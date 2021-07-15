@@ -2,6 +2,7 @@ extern crate sfml;
 
 mod keyboard;
 mod memory;
+mod cpu;
 
 /*use sfml::{
     audio::{Sound, SoundBuffer},
