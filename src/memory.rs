@@ -5,7 +5,7 @@ use std::fs;
 use std::fs::File;
 use byteorder::{ReadBytesExt, BigEndian};
 
-struct MemoryMap {
+pub struct MemoryMap {
     /*
     Memory Map:
     +---------------+= 0xFFF (4095) End of Chip-8 RAM
