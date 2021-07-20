@@ -5,6 +5,8 @@ use std::fs;
 use std::fs::File;
 use byteorder::{ReadBytesExt, BigEndian};
 
+use std::ops::{Index, IndexMut};
+
 pub struct MemoryMap {
     /*
     Memory Map:
@@ -33,6 +35,19 @@ pub struct MemoryMap {
     */
     memory: [u16; 0xFFF],
     rom_name: String,
+}
+
+impl Index<u16> for MemoryMap {
+    type Output = u16;
+    fn index<'a>(&'a self, i: u16) -> &'a u16 {
+        &self.memory[usize::from(i)]
+    }
+}
+
+impl IndexMut<u16> for MemoryMap{
+    fn index_mut<'a>(&'a mut self, i: u16) -> &'a mut u16 {
+        &mut self.memory[usize::from(i)]
+    }
 }
 
 impl MemoryMap {
