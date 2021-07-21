@@ -1,5 +1,7 @@
 pub struct Keyboard {
     keys: [State; 0xF],
+
+    keyPressed: bool,
 }
 
 pub enum State{
@@ -11,34 +13,27 @@ pub enum State{
 
 impl Keyboard{
 
-    fn process_key (&mut self, key: u8, State: State) {
+    pub fn resetKeyPress(&mut self) {
+        self.keyPressed = false;
+    }
+
+    pub fn process_key (&mut self, key: u8, state: State) {
+        if state == State::PRESSED {
+            self.keyPressed = true;
+        }
+
         if self.keys[key] == State::PRESSED || self.keys[key] == State::HELD {
-            if State == State::PRESSED {
+            if state == State::PRESSED {
                 self.keys[key] = State::HELD;
             } else {
                 self.keys[key] = State::RELEASED;
             }
         } else {
-            self.keys[key] = State; // No need to have specific transitions
+            self.keys[key] = state; // No need to have specific transitions
         }
+    }
 
-        /*match key {
-          A => {},
-          B => {},
-          C => {},
-          D => {},
-          E => {},
-          F => {},
-          0 => {},
-          1 => {},
-          2 => {},
-          3 => {},
-          4 => {},
-          5 => {},
-          6 => {},
-          7 => {},
-          8 => {},
-          9 => {},
-          }*/
+    pub fn isAnyKeyPressed(&mut self) -> bool {
+        self.keyPressed
     }
 }

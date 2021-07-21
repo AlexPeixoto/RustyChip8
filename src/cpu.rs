@@ -220,24 +220,29 @@ impl CPU {
         let subOpCode = opCode & 0xFF;
         let reg = CPU::getValFromOpCode(opCode, 2);
         match subOpCode {
-            // Self Keyboard
-            0x07 => {
-            },
-            0x0A => {
-            },
-            0x15 => {
-            },
-            0x18 => {
-            },
-            0x1E => {
-            },
+            0x07 =>  self.V[reg] = self.bus.getDT(),
+            0x0A => self.bus.lockUntilPressed(),
+            0x15 => self.bus.setDT(self.V[reg]),
+            0x18 => self.bus.setST(self.V[reg]),
+            0x1E => self.I = self.V[reg] + self.I,
             0x29 => {
             },
             0x33 => {
             },
             0x55 => {
+                /*
+                 * The interpreter copies the values of registers V0 through Vx into memory,
+                 * starting at the address in I.
+                 */
+                for idx in 0x0..0xF {
+                    self.bus.memory[self.i + idx] = self.V[idx];
+                }
             },
             0x65 => {
+                for idx in 0x0..0xF {
+                    self.V[idx] = self.bus.memory[self.i + idx];
+                }
+
             },
             _ => {
                 CPU::abort();

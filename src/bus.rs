@@ -19,10 +19,59 @@ pub struct Bus{
     pub memory: MemoryMap,
     pub keyboard: Keyboard,
 
-    frameTimerCount: u16,
+    DT: u8,
+    ST: u8,
+
+    lockUntilPressed: bool,
 }
 
 impl Bus{
+    fn tickFrameTimer(&mut self) {
+        if self.DT > 0 {
+            self.DT = self.DT - 1;
+        }
+        if self.ST > 0 {
+            self.ST = self.ST - 1;
+        }
+    }
+
+    fn tickFrameCPUGPU(&mut self) {
+        if self.keyboard.isAnykeyPressed() && self.lockUntilPressed {
+            self.lockUntilPressed = false;
+        }
+                 
+        if self.lockUntilPressed {
+            return;
+        }
+        //for clocks per frame
+        // self.cpu.tick();
+        //self.gpu.tick();
+    } 
+
+    fn tickFrame(&mut self) {
+        self.tickFrameCPUGPU();
+        self.tickFrameTimer();
+    }
+
+    pub fn getDT(&mut self) -> u8 {
+        self.DT
+    }
+
+    pub fn getST(&mut self) -> u8 {
+        self.ST
+    }
+
+    pub fn setDT(&mut self, val: u8) {
+        self.DT = val;
+    }
+
+    pub fn setST(&mut self, val: u8) {
+        self.ST = val;
+    }
+
+    pub fn lockUntilPressed(&mut self) {
+        self.lockUntilPressed = true;
+    }
 }
 
 
