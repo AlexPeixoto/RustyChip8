@@ -33,19 +33,19 @@ pub struct MemoryMap {
     |  interpreter  |
     +---------------+= 0x000 (0) Start of Chip-8 RAM
     */
-    memory: [u16; 0xFFF],
+    memory: [u8; 0xFFF],
     rom_name: String,
 }
 
 impl Index<u16> for MemoryMap {
-    type Output = u16;
-    fn index<'a>(&'a self, i: u16) -> &'a u16 {
+    type Output = u8;
+    fn index<'a>(&'a self, i: u16) -> &'a u8 {
         &self.memory[usize::from(i)]
     }
 }
 
 impl IndexMut<u16> for MemoryMap{
-    fn index_mut<'a>(&'a mut self, i: u16) -> &'a mut u16 {
+    fn index_mut<'a>(&'a mut self, i: u16) -> &'a mut u8 {
         &mut self.memory[usize::from(i)]
     }
 }
@@ -91,6 +91,6 @@ impl MemoryMap {
 
         //let instructions_count = metadata.len()/2;
 
-        rom.read_u16_into::<BigEndian>(&mut slice[..]).unwrap();
+        rom.read_u8_into::<BigEndian>(&mut slice[..]).unwrap();
     }
 }

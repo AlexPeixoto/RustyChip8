@@ -11,7 +11,7 @@ pub struct CPU {
     //16 V registers
     V: [u8; 0xF],
     //Single I register
-    I: u16,
+    I: u8,
     //Stack in CHIP-8 is
     //limited to 16 elements
     stack: [u16; 0xF],
@@ -228,6 +228,13 @@ impl CPU {
             0x29 => {
             },
             0x33 => {
+                let memPos = self.V[reg] as usize;
+                let mut val = self.V[memPos];
+                for idx in 0..2 {
+                    let currentPos = (self.I + idx) as u16;
+                    self.bus.memory[currentPos] = (val%10) as u16;
+                    val = val/10;
+                }
             },
             0x55 => {
                 /*
@@ -235,12 +242,14 @@ impl CPU {
                  * starting at the address in I.
                  */
                 for idx in 0x0..0xF {
-                    self.bus.memory[self.i + idx] = self.V[idx];
+                    let currentPos = (self.I + idx) as u16;
+                    self.bus.memory[currentPos] = self.V[idx as usize];
                 }
             },
             0x65 => {
                 for idx in 0x0..0xF {
-                    self.V[idx] = self.bus.memory[self.i + idx];
+                    let currentPos = (self.I + idx) as u16;
+                    self.V[idx as usize] = self.bus.memory[currentPos];
                 }
 
             },
