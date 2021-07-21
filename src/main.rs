@@ -1,8 +1,10 @@
 extern crate sfml;
 
-mod keyboard;
-mod memory;
+mod bus;
 mod cpu;
+mod gpu; 
+mod memory;
+mod keyboard;
 
 /*use sfml::{
     audio::{Sound, SoundBuffer},

@@ -1,9 +1,10 @@
 use std::process;
 use rand::Rng;
 
-use crate::memory::MemoryMap;
+use crate::bus::Bus;
+use crate::keyboard::Keyboard;
 
-struct CPU {
+pub struct CPU {
     SP:u16,
     PC:u16,
 
@@ -14,7 +15,7 @@ struct CPU {
     //Stack in CHIP-8 is
     //limited to 16 elements
     stack: [u16; 0xF],
-    memory: Box<MemoryMap>,
+    bus: Box<Bus>,
 }
 
 enum PCIncrement {
@@ -29,18 +30,18 @@ impl CPU {
     }
 
     fn pushPCtoStack(&mut self) {
-        self.memory[self.SP] = self.PC;
+        self.bus.memory[self.SP] = self.PC;
         self.SP += 1;
     }
 
     fn popPCfromStack(&mut self) {
-        self.PC = self.memory[self.SP];
+        self.PC = self.bus.memory[self.SP];
         self.SP -= 1;
     }
 
     fn executeNextInstruction(&mut self) {
         self.PC += 1;
-        let opCode = self.memory[self.PC];
+        let opCode = self.bus.memory[self.PC];
         if opCode == 0x00E0 {
             //clear screen
         }
@@ -88,7 +89,7 @@ impl CPU {
                 }
 
                 let regs = (CPU::getValFromOpCode(opCode, 1),
-                            CPU::getValFromOpCode(opCode, 2));
+                CPU::getValFromOpCode(opCode, 2));
                 if self.V[regs.0] == self.V[regs.1] {
                     incrementType = PCIncrement::SKIP;
                 }
@@ -113,7 +114,7 @@ impl CPU {
                 }
 
                 let regs = (CPU::getValFromOpCode(opCode, 1),
-                            CPU::getValFromOpCode(opCode, 2));
+                CPU::getValFromOpCode(opCode, 2));
                 if self.V[regs.0] != self.V[regs.1] {
                     incrementType = PCIncrement::SKIP;
                 }
@@ -131,8 +132,10 @@ impl CPU {
                 self.V[reg] = val & (opCode & 0xFF) as u8;
             },
             0xD => {
-               CPU::renderSpritesXY(self.I, self.memory); 
+                CPU::renderSpritesXY(self.I, &self.bus); 
             },
+            0xE => {
+            }
             _ => {
                 CPU::abort();
             }
@@ -146,7 +149,7 @@ impl CPU {
         } 
     }
 
-    fn renderSpritesXY(I:u16, memory: Box<MemoryMap>) {
+    fn renderSpritesXY(I:u16, memory: &Box<Bus>) {
     }
 
     fn abort() {
@@ -188,6 +191,56 @@ impl CPU {
             _ => {
                 println!("Invalid instruction");
                 process::abort();
+            }
+        }
+    }
+
+    fn executeInstrOpE(&mut self, incrementType: &mut PCIncrement, opCode:u16) {
+        let subOpCode = opCode & 0xFF;
+        let reg = CPU::getValFromOpCode(opCode, 2);
+        match subOpCode {
+            // Self Keyboard
+            0x9E => {
+                if self.bus.keyboard.isKeyPressed(self.V[reg]) {
+                    *incrementType = PCIncrement::SKIP;
+                }
+            },
+            0xA1 => {
+                if !self.bus.keyboard.isKeyPressed(self.V[reg]) {
+                    *incrementType = PCIncrement::SKIP;
+                }
+            },
+            _ => {
+                CPU::abort();
+            }
+        }
+    }
+
+    fn executeInstrOpF(&mut self, incrementType: &mut PCIncrement, opCode:u16) {
+        let subOpCode = opCode & 0xFF;
+        let reg = CPU::getValFromOpCode(opCode, 2);
+        match subOpCode {
+            // Self Keyboard
+            0x07 => {
+            },
+            0x0A => {
+            },
+            0x15 => {
+            },
+            0x18 => {
+            },
+            0x1E => {
+            },
+            0x29 => {
+            },
+            0x33 => {
+            },
+            0x55 => {
+            },
+            0x65 => {
+            },
+            _ => {
+                CPU::abort();
             }
         }
     }
