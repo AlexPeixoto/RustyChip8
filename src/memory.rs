@@ -40,13 +40,13 @@ pub struct MemoryMap {
 impl Index<u16> for MemoryMap {
     type Output = u8;
     fn index<'a>(&'a self, i: u16) -> &'a u8 {
-        &self.memory[usize::from(i)]
+        &self.memory[i as usize]
     }
 }
 
 impl IndexMut<u16> for MemoryMap{
     fn index_mut<'a>(&'a mut self, i: u16) -> &'a mut u8 {
-        &mut self.memory[usize::from(i)]
+        &mut self.memory[i as usize]
     }
 }
 

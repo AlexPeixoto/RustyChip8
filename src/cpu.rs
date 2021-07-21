@@ -30,18 +30,19 @@ impl CPU {
     }
 
     fn pushPCtoStack(&mut self) {
-        self.bus.memory[self.SP] = self.PC;
+        self.stack[self.SP as usize] = self.PC;
         self.SP += 1;
     }
 
     fn popPCfromStack(&mut self) {
-        self.PC = self.bus.memory[self.SP];
+        self.PC = self.stack[self.SP as usize];
         self.SP -= 1;
     }
 
     fn executeNextInstruction(&mut self) {
         self.PC += 1;
-        let opCode = self.bus.memory[self.PC];
+        // Opcodes are stored in 2 bytes
+        let opCode = self.bus.memory[self.PC] << 8 | self.bus.memory[self.PC + 1];
         if opCode == 0x00E0 {
             //clear screen
         }
@@ -143,8 +144,8 @@ impl CPU {
 
         // Handle PC increment
         match incrementType {
-            PCIncrement::SINGLE => self.PC += 1,
-            PCIncrement::SKIP => self.PC += 2,
+            PCIncrement::SINGLE => self.PC += 2,
+            PCIncrement::SKIP => self.PC += 4,
             PCIncrement::NONE => {},
         } 
     }
@@ -230,9 +231,14 @@ impl CPU {
             0x33 => {
                 let memPos = self.V[reg] as usize;
                 let mut val = self.V[memPos];
-                for idx in 0..2 {
+                /*
+                 * Run in inverse order
+                 * 156 should be stored, for example
+                 * as 1, 5, 6 ON [2, 1, 0]
+                 */
+                for idx in 2..0 {
                     let currentPos = (self.I + idx) as u16;
-                    self.bus.memory[currentPos] = (val%10) as u16;
+                    self.bus.memory[currentPos] = val%10;
                     val = val/10;
                 }
             },
