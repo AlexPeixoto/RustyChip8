@@ -11,7 +11,7 @@ pub struct CPU {
     //16 V registers
     V: [u8; 0xF],
     //Single I register
-    I: u8,
+    I: u16,
     //Stack in CHIP-8 is
     //limited to 16 elements
     stack: [u16; 0xF],
@@ -42,7 +42,7 @@ impl CPU {
     fn executeNextInstruction(&mut self) {
         self.PC += 1;
         // Opcodes are stored in 2 bytes
-        let opCode = self.bus.memory[self.PC] << 8 | self.bus.memory[self.PC + 1];
+        let opCode = (self.bus.memory[self.PC] << 8 | self.bus.memory[self.PC + 1]) as u16;
         if opCode == 0x00E0 {
             //clear screen
         }
@@ -136,7 +136,11 @@ impl CPU {
                 CPU::renderSpritesXY(self.I, &self.bus); 
             },
             0xE => {
-            }
+                self.executeInstrOpE(&mut incrementType, opCode);
+            },
+            0xF => {
+                self.executeInstrOpF(&mut incrementType, opCode);
+            },
             _ => {
                 CPU::abort();
             }
@@ -168,7 +172,7 @@ impl CPU {
             0x2 => V[regs.0] = V[regs.0] & V[regs.1],
             0x3 => V[regs.0] = V[regs.0] ^ V[regs.1],
             0x4 => {
-                let tmpSum = (V[regs.0] + V[regs.1]) as u8;
+                let tmpSum = (V[regs.0] + V[regs.1]) as u16;
                 V[0xF] = (tmpSum > 0xFF) as u8;
                 V[regs.0] = tmpSum as u8;
             },
@@ -225,8 +229,15 @@ impl CPU {
             0x0A => self.bus.lockUntilPressed(),
             0x15 => self.bus.setDT(self.V[reg]),
             0x18 => self.bus.setST(self.V[reg]),
-            0x1E => self.I = self.V[reg] + self.I,
+            0x1E => {
+                let tmpSum = (u16::from(self.V[reg]) + self.I) as u16;
+                self.V[0xF] = (tmpSum > 0xFFF) as u8;
+                self.I = tmpSum;
+            },
             0x29 => {
+                //The opcode contains the memory location for the index of the char
+                //Each char has 5 bytes, so we get the position and multiply by 5
+                self.I = u16::from(self.V[reg]) * 5;
             },
             0x33 => {
                 let memPos = self.V[reg] as usize;
