@@ -154,7 +154,17 @@ impl CPU {
         } 
     }
 
-    fn renderSpritesXY(I:u16, memory: &Box<Bus>) {
+    fn renderSpritesXY(&mut self, X:u8, Y:u8, N:u8, memory: &Box<Bus>) {
+        // Initial position warp, but, if it starts at 63 we dont warp
+        // further pixel writes
+        let x_pos = self.V[X] % 64;
+        let y_pos = self.V[Y] % 32;
+        let height = N;
+
+        self.V[0xF] = 0;
+
+        let pixel_byte = self.V[self.I];
+
     }
 
     fn abort() {

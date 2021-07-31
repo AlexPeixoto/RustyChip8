@@ -1,9 +1,11 @@
 #![feature(rustc_private)]
 extern crate byteorder;
+extern crate bitmatrix;
 
 use std::fs;
 use std::fs::File;
 use byteorder::{ReadBytesExt, BigEndian};
+use bitmatrix::BitMatrix;
 
 use std::ops::{Index, IndexMut};
 
@@ -35,6 +37,7 @@ pub struct MemoryMap {
     */
     memory: [u8; 0xFFF],
     rom_name: String,
+    vram: BitMatrix,
 }
 
 impl Index<u16> for MemoryMap {
@@ -53,10 +56,19 @@ impl IndexMut<u16> for MemoryMap{
 impl MemoryMap {
     fn new(rom_name: &str) -> Self {
         //this is actually returning a new instance
-        Self {
+        let mut toRet = Self {
             memory: [0; 0xFFF],
+            vram: BitMatrix::new(32, 64),
             rom_name: rom_name.to_owned(),
+        };
+
+        for i in 0..32 {
+            for j in 0..64 {
+                toRet.vram.set(i, j, false);
+            }
         }
+        
+        toRet
     }
 
     fn init_font(&mut self) {
