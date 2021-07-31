@@ -20,8 +20,8 @@ use sfml::graphics::RenderWindow;
 
 fn main() {
     let mut window = RenderWindow::new(
-        //64 x 64 chip 8 resolution
-        (640, 640),
+        //64 x 32 chip 8 resolution
+        (640, 320),
         "RustyChip8 Emulator",
         Style::CLOSE,
         &ContextSettings::default(),

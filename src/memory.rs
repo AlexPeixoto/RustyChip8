@@ -38,6 +38,7 @@ pub struct MemoryMap {
     memory: [u8; 0xFFF],
     rom_name: String,
     vram: BitMatrix,
+    vram_changed: bool,
 }
 
 impl Index<u16> for MemoryMap {
@@ -58,7 +59,10 @@ impl MemoryMap {
         //this is actually returning a new instance
         let mut toRet = Self {
             memory: [0; 0xFFF],
-            vram: BitMatrix::new(32, 64),
+            //To preserve X, Y, "order" the matrix
+            //is "inverted", just to avoid confusion later
+            vram: BitMatrix::new(64, 42),
+            vram_changed: false,
             rom_name: rom_name.to_owned(),
         };
 
@@ -104,5 +108,17 @@ impl MemoryMap {
         //let instructions_count = metadata.len()/2;
 
         rom.read_u8_into::<BigEndian>(&mut slice[..]).unwrap();
+    }
+
+    fn get_vram(&mut self, x: u8, y: u8) {
+        self.vram[(x, y)]
+    }
+
+    fn set_vram(&mut self, x: u8, y: u8, set: bool) {
+        self.vram.set(x as usize, y as usize, set);
+    }
+
+    fn pending_screen_update(&mut self, updated: bool) {
+        self.vram_changed = updated;
     }
 }

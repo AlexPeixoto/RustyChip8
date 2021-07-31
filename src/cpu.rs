@@ -1,8 +1,12 @@
+extern crate bit_vec;
+
 use std::process;
 use rand::Rng;
 
 use crate::bus::Bus;
 use crate::keyboard::Keyboard;
+
+use bit_vec::BitVec;
 
 pub struct CPU {
     SP:u16,
@@ -154,6 +158,7 @@ impl CPU {
         } 
     }
 
+    /* Maybe move that into GPU in the future? */
     fn renderSpritesXY(&mut self, X:u8, Y:u8, N:u8, memory: &Box<Bus>) {
         // Initial position warp, but, if it starts at 63 we dont warp
         // further pixel writes
@@ -163,7 +168,54 @@ impl CPU {
 
         self.V[0xF] = 0;
 
-        let pixel_byte = self.V[self.I];
+        for y in 0..height {
+            let pixel_vec = BitVec::from_bytes(&self.V[self.I]);
+            let target_y = y + y_pos;
+            for x in 0..8 {
+                let mut bit_goal = false;
+                let target_x = x + x_pos;
+                // We only warp at the start (we break the loop and
+                // avoid warp here.
+                if target_x >= 64 {
+                    break
+                }
+
+                let pixel = pixel_vec[x] as bool;
+                let is_set = memory.get_vram(target_x, target_y);
+
+                /* Weird pixel set behavior
+                 *
+                 * If the current pixel in the sprite row is on and the pixel at 
+                 * coordinates X,Y on the screen is also on, turn off the pixel 
+                 * and set VF to 1
+                 *
+                 * Or if the current pixel in the sprite row is on and the screen 
+                 * pixel is not, draw the pixel at the X and Y coordinates
+                 */
+                if pixel {
+                    if is_set {
+                        self.V[0xF] = 1;
+                    } else {
+                        bit_goal = true;
+                    }
+                } else if is_set {
+                    bit_goal = true;
+                }
+
+                /* We only redraw the screen if there
+                 * is a pending update.
+                 * While the main code will redraw everything
+                 * and we could improve that, this will be
+                 * left as it is now.
+                 */
+                if bit_goal != is_set {
+                    memory.pending_screen_update(true);
+                }
+
+                /* Set the bit on vram */
+                memory.set_vram(target_x, target_y, bit_goal);
+            }
+        }
 
     }
 
