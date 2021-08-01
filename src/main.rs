@@ -17,8 +17,11 @@ mod keyboard;
 };*/
 use sfml::window::{ContextSettings, Event, Style};
 use sfml::graphics::RenderWindow;
+use crate::bus::Bus;
 
 fn main() {
+    let bus = Bus::new("ibm.ch8");
+
     let mut window = RenderWindow::new(
         //64 x 32 chip 8 resolution
         (640, 320),

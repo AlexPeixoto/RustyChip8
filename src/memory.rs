@@ -4,7 +4,7 @@ extern crate bitmatrix;
 
 use std::fs;
 use std::fs::File;
-use byteorder::{ReadBytesExt, BigEndian};
+use std::io::Read;
 use bitmatrix::BitMatrix;
 
 use std::ops::{Index, IndexMut};
@@ -55,9 +55,9 @@ impl IndexMut<u16> for MemoryMap{
 }
 
 impl MemoryMap {
-    fn new(rom_name: &str) -> Self {
+    pub fn new(rom_name: &str) -> Self {
         //this is actually returning a new instance
-        let mut toRet = Self {
+        let mut to_ret = Self {
             memory: [0; 0xFFF],
             //To preserve X, Y, "order" the matrix
             //is "inverted", just to avoid confusion later
@@ -68,11 +68,11 @@ impl MemoryMap {
 
         for i in 0..32 {
             for j in 0..64 {
-                toRet.vram.set(i, j, false);
+                to_ret.vram.set((i, j), false);
             }
         }
         
-        toRet
+        to_ret
     }
 
     fn init_font(&mut self) {
@@ -107,18 +107,19 @@ impl MemoryMap {
 
         //let instructions_count = metadata.len()/2;
 
-        rom.read_u8_into::<BigEndian>(&mut slice[..]).unwrap();
+        rom.read(&mut slice[..]);
+        //rom.read(&mut slice[..]).unwrap();
     }
 
-    fn get_vram(&mut self, x: u8, y: u8) {
+    pub fn get_vram(&mut self, x: usize, y: usize) -> bool {
         self.vram[(x, y)]
     }
 
-    fn set_vram(&mut self, x: u8, y: u8, set: bool) {
-        self.vram.set(x as usize, y as usize, set);
+    pub fn set_vram(&mut self, x: usize, y: usize, set: bool) {
+        self.vram.set((x, y), set);
     }
 
-    fn pending_screen_update(&mut self, updated: bool) {
+    pub fn pending_screen_update(&mut self, updated: bool) {
         self.vram_changed = updated;
     }
 }

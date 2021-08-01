@@ -15,7 +15,6 @@ use crate::keyboard::Keyboard;
  */
 pub struct Bus{
     cpu: CPU,
-    gpu: GPU,
     pub memory: MemoryMap,
     pub keyboard: Keyboard,
 
@@ -26,6 +25,16 @@ pub struct Bus{
 }
 
 impl Bus{
+    pub fn new(file: &str) -> Bus {
+        Bus {
+            cpu: CPU::new(),
+            memory: MemoryMap::new(file),
+            keyboard: Keyboard::new(),
+            DT: 0,
+            ST: 0,
+            lockUntilPressed: false,
+        }
+    }
     fn tickFrameTimer(&mut self) {
         if self.DT > 0 {
             self.DT = self.DT - 1;
@@ -36,13 +45,13 @@ impl Bus{
     }
 
     fn tickFrameCPUGPU(&mut self) {
-        if self.keyboard.isAnykeyPressed() && self.lockUntilPressed {
+        /*if self.keyboard.isAnykeyPressed() && self.lockUntilPressed {
             self.lockUntilPressed = false;
         }
                  
         if self.lockUntilPressed {
             return;
-        }
+        }*/
         //for clocks per frame
         // self.cpu.tick();
         //self.gpu.tick();
