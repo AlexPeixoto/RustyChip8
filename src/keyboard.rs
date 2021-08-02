@@ -39,7 +39,7 @@ impl Keyboard{
         }
     }
 
-    pub fn isAnyKeyPressed(&mut self) -> bool {
+    pub fn was_any_key_pressed(&mut self) -> bool {
         self.keyPressed
     }
 

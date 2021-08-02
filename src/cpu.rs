@@ -2,9 +2,9 @@ extern crate bit_vec;
 
 use std::process;
 use rand::Rng;
-use std::rc::Rc;
 
 use crate::bus::Bus;
+use crate::busstate::BusState;
 use crate::memory::MemoryMap;
 use crate::keyboard::Keyboard;
 
@@ -54,12 +54,12 @@ impl CPU {
         self.SP -= 1;
     }
 
-    fn executeNextInstruction(&mut self, bus: &mut Bus) {
-        self.PC += 1;
+    pub fn executeNextInstruction(&mut self, memory: &mut MemoryMap, keyboard: &mut Keyboard, state: &mut BusState) {
         // Opcodes are stored in 2 bytes
-        let opCode = (bus.memory[self.PC] << 8 | bus.memory[self.PC + 1]) as u16;
+        let opCode = (memory[self.PC] << 8 | memory[self.PC + 1]) as u16;
         if opCode == 0x00E0 {
-            //clear screen
+            memory.clear_vram();
+
         }
         else if opCode == 0xEE {
             self.popPCfromStack();
@@ -152,13 +152,13 @@ impl CPU {
                     CPU::getValFromOpCode(opCode, 2),
                     CPU::getValFromOpCode(opCode, 1),
                     CPU::getValFromOpCode(opCode, 0),
-                    &mut bus.memory);
+                    memory);
             },
             0xE => {
-                self.executeInstrOpE(&mut incrementType, opCode, bus);
+                self.executeInstrOpE(&mut incrementType, opCode, keyboard);
             },
             0xF => {
-                self.executeInstrOpF(&mut incrementType, opCode, bus);
+                self.executeInstrOpF(&mut incrementType, opCode, memory, state);
             },
             _ => {
                 CPU::abort();
@@ -278,18 +278,18 @@ impl CPU {
         }
     }
 
-    fn executeInstrOpE(&mut self, incrementType: &mut PCIncrement, opCode:u16, bus: &mut Bus) {
+    fn executeInstrOpE(&mut self, incrementType: &mut PCIncrement, opCode:u16, keyboard: &mut Keyboard) {
         let subOpCode = opCode & 0xFF;
         let reg = CPU::getValFromOpCode(opCode, 2);
         match subOpCode {
             // Self Keyboard
             0x9E => {
-                if bus.keyboard.isKeyPressed(self.V[reg] as usize) {
+                if keyboard.isKeyPressed(self.V[reg] as usize) {
                     *incrementType = PCIncrement::SKIP;
                 }
             },
             0xA1 => {
-                if !bus.keyboard.isKeyPressed(self.V[reg] as usize) {
+                if !keyboard.isKeyPressed(self.V[reg] as usize) {
                     *incrementType = PCIncrement::SKIP;
                 }
             },
@@ -299,14 +299,14 @@ impl CPU {
         }
     }
 
-    fn executeInstrOpF(&mut self, incrementType: &mut PCIncrement, opCode:u16, bus: &mut Bus) {
+    fn executeInstrOpF(&mut self, incrementType: &mut PCIncrement, opCode:u16, memory: &mut MemoryMap, state: &mut BusState) {
         let subOpCode = opCode & 0xFF;
         let reg = CPU::getValFromOpCode(opCode, 2);
         match subOpCode {
-            0x07 =>  self.V[reg] = bus.getDT(),
-            0x0A => bus.lockUntilPressed(),
-            0x15 => bus.setDT(self.V[reg]),
-            0x18 => bus.setST(self.V[reg]),
+            0x07 =>  self.V[reg] = state.delay,
+            0x0A => state.lock_until_pressed = true,
+            0x15 => state.delay = self.V[reg],
+            0x18 => state.sound = self.V[reg],
             0x1E => {
                 let tmpSum = (u16::from(self.V[reg]) + self.I) as u16;
                 self.V[0xF] = (tmpSum > 0xFFF) as u8;
@@ -327,7 +327,7 @@ impl CPU {
                  */
                 for idx in 2..0 {
                     let currentPos = (self.I + idx) as u16;
-                    bus.memory[currentPos] = val%10;
+                    memory[currentPos] = val%10;
                     val = val/10;
                 }
             },
@@ -338,13 +338,13 @@ impl CPU {
                  */
                 for idx in 0x0..0xF {
                     let currentPos = (self.I + idx) as u16;
-                    bus.memory[currentPos] = self.V[idx as usize];
+                    memory[currentPos] = self.V[idx as usize];
                 }
             },
             0x65 => {
                 for idx in 0x0..0xF {
                     let currentPos = (self.I + idx) as u16;
-                    self.V[idx as usize] = bus.memory[currentPos];
+                    self.V[idx as usize] = memory[currentPos];
                 }
 
             },

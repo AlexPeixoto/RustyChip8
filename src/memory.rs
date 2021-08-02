@@ -11,30 +11,30 @@ use std::ops::{Index, IndexMut};
 
 pub struct MemoryMap {
     /*
-    Memory Map:
-    +---------------+= 0xFFF (4095) End of Chip-8 RAM
-    |               |
-    |               |
-    |               |
-    |               |
-    |               |
-    | 0x200 to 0xFFF|
-    |     Chip-8    |
-    | Program / Data|
-    |     Space     |
-    |               |
-    |               |
-    |               |
-    +- - - - - - - -+= 0x600 (1536) Start of ETI 660 Chip-8 programs
-    |               |
-    |               |
-    |               |
-    +---------------+= 0x200 (512) Start of most Chip-8 programs
-    | 0x000 to 0x1FF|
-    | Reserved for  |
-    |  interpreter  |
-    +---------------+= 0x000 (0) Start of Chip-8 RAM
-    */
+       Memory Map:
+       +---------------+= 0xFFF (4095) End of Chip-8 RAM
+       |               |
+       |               |
+       |               |
+       |               |
+       |               |
+       | 0x200 to 0xFFF|
+       |     Chip-8    |
+       | Program / Data|
+       |     Space     |
+       |               |
+       |               |
+       |               |
+       +- - - - - - - -+= 0x600 (1536) Start of ETI 660 Chip-8 programs
+       |               |
+       |               |
+       |               |
+       +---------------+= 0x200 (512) Start of most Chip-8 programs
+       | 0x000 to 0x1FF|
+       | Reserved for  |
+       |  interpreter  |
+       +---------------+= 0x000 (0) Start of Chip-8 RAM
+       */
     memory: [u8; 0xFFF],
     rom_name: String,
     vram: BitMatrix,
@@ -71,7 +71,7 @@ impl MemoryMap {
                 to_ret.vram.set((i, j), false);
             }
         }
-        
+
         to_ret
     }
 
@@ -115,11 +115,28 @@ impl MemoryMap {
         self.vram[(x, y)]
     }
 
+    pub fn get_full_vram(&self) -> BitMatrix {
+        self.vram.clone()
+    }
+
     pub fn set_vram(&mut self, x: usize, y: usize, set: bool) {
         self.vram.set((x, y), set);
     }
 
     pub fn pending_screen_update(&mut self, updated: bool) {
         self.vram_changed = updated;
+    }
+
+    pub fn was_screen_updated(&self) -> bool {
+        self.vram_changed.clone()
+    }
+
+    pub fn clear_vram(&mut self) {
+        for i in 0..32 {
+            for j in 0..64 {
+                self.vram.set((i, j), false);
+            }
+        }
+        self.vram_changed = true;
     }
 }

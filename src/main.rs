@@ -1,6 +1,7 @@
 extern crate sfml;
 
 mod bus;
+mod busstate;
 mod cpu;
 mod gpu; 
 mod memory;
@@ -16,19 +17,20 @@ mod keyboard;
     window::{ContextSettings, Event, Key, Style},
 };*/
 use sfml::window::{ContextSettings, Event, Style};
-use sfml::graphics::RenderWindow;
+use sfml::graphics::{RenderWindow, Texture};
 use crate::bus::Bus;
 
 fn main() {
-    let bus = Bus::new("ibm.ch8");
 
     let mut window = RenderWindow::new(
         //64 x 32 chip 8 resolution
-        (640, 320),
+        (64, 32),
         "RustyChip8 Emulator",
         Style::CLOSE,
         &ContextSettings::default(),
     );
+    let mut texture = Texture::new(64, 32);
+    let bus = Bus::new("ibm.ch8");
 
     while window.is_open() {
         while let Some(event) = window.poll_event() {
@@ -37,7 +39,10 @@ fn main() {
                 window.close();
             }
         }
-
+        let screen_updated = bus.was_screen_updated();
+        if screen_updated {
+            let vram = bus.get_vram();
+        }
         //window.set_active(true);
         window.display();
     }
