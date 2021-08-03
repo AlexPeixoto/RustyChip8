@@ -1,7 +1,7 @@
 pub struct Keyboard {
     keys: [State; 0xF],
 
-    keyPressed: bool,
+    key_pressed: bool,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -16,16 +16,16 @@ impl Keyboard{
     pub fn new() -> Keyboard {
         Keyboard {
             keys: [State::NOTPRESSED; 0xF],
-            keyPressed: false,
+            key_pressed: false,
         }
     }
-    pub fn resetKeyPress(&mut self) {
-        self.keyPressed = false;
+    pub fn reset_key_press(&mut self) {
+        self.key_pressed = false;
     }
 
     pub fn process_key (&mut self, key: usize, state: State) {
         if state == State::PRESSED {
-            self.keyPressed = true;
+            self.key_pressed = true;
         }
 
         if self.keys[key] == State::PRESSED || self.keys[key] == State::HELD {
@@ -40,10 +40,10 @@ impl Keyboard{
     }
 
     pub fn was_any_key_pressed(&mut self) -> bool {
-        self.keyPressed
+        self.key_pressed
     }
 
-    pub fn isKeyPressed(&mut self, key: usize) -> bool {
+    pub fn is_key_pressed(&mut self, key: usize) -> bool {
         self.keys[key] == State::PRESSED
     }
 }

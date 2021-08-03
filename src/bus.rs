@@ -1,6 +1,5 @@
 extern crate bitmatrix;
 
-
 use crate::busstate::BusState;
 use crate::cpu::CPU;
 use crate::memory::MemoryMap;
@@ -47,7 +46,7 @@ impl Bus{
         self.memory.get_full_vram()
     }
 
-    pub fn tickFrameTimer(&mut self) {
+    pub fn tick_frame_timer(&mut self) {
         if self.state.delay > 0 {
             self.state.delay = self.state.delay - 1;
         }
@@ -56,17 +55,21 @@ impl Bus{
         }
     }
 
-    pub fn tickFrameCPU(&mut self) {
+    pub fn tick_frame_cpu(&mut self) {
         if self.keyboard.was_any_key_pressed() && self.state.lock_until_pressed {
             self.state.lock_until_pressed = false;
         }
-                 
+                    
         if self.state.lock_until_pressed {
             return;
         }
         //four clocks per frame
         //This looks ugly, needs to revisit this once I learn more about the language
-        self.cpu.executeNextInstruction(&mut self.memory, &mut self.keyboard, &mut self.state);
+        self.cpu.execute_next_instruction(
+            &mut self.memory,
+            &mut self.keyboard,
+            &mut self.state
+        );
     } 
 }
 

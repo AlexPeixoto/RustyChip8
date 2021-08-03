@@ -3,20 +3,9 @@ extern crate sfml;
 mod bus;
 mod busstate;
 mod cpu;
-mod gpu; 
 mod memory;
 mod keyboard;
 
-/*use sfml::{
-  audio::{Sound, SoundBuffer},
-  graphics::{
-  CircleShape, Color, Font, RectangleShape, RenderTarget, RenderWindow, Shape, Text,
-  Transformable,
-  },
-  system::{Clock, Time, Vector2f},
-  window::{ContextSettings, Event, Key, Style},
-  };*/
-use sfml::system::SfBox;
 use sfml::window::{ContextSettings, Event, Style};
 use sfml::graphics::{Color, Image, RenderTarget, RenderWindow, Texture, Sprite};
 use crate::bus::Bus;
@@ -46,8 +35,8 @@ fn main() {
                 window.close();
             }
         }
-        for tick in 0..4 {
-            bus.tickFrameCPU();
+        for _tick in 0..4 {
+            bus.tick_frame_cpu();
         }
         let screen_updated = bus.was_screen_updated();
         if screen_updated {
@@ -68,6 +57,6 @@ fn main() {
         window.draw(&sprite); 
         window.display();
 
-        bus.tickFrameTimer();
+        bus.tick_frame_timer();
     }
 }

@@ -1,8 +1,6 @@
-#![feature(rustc_private)]
 extern crate byteorder;
 extern crate bitmatrix;
 
-use std::fs;
 use std::fs::File;
 use std::io::Read;
 use bitmatrix::BitMatrix;
