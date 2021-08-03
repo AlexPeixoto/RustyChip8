@@ -12,7 +12,7 @@ The code passes test rom, keyboard rom, PONG, Maze, RNG and probably several oth
 
 Below are some images of it running
 
-![It works](https://github.com/AlexPeixoto/RustyChip8/blob/main/imgs/logo.png)
+![It works](https://github.com/AlexPeixoto/RustyChip8/blob/main/imgs/logo_ch8.png)
 
 ![Pong](https://github.com/AlexPeixoto/RustyChip8/blob/main/imgs/pong.jpeg)
 
