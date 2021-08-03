@@ -28,6 +28,7 @@ pub struct CPU {
 enum PcIncrement {
     SINGLE,
     SKIP,
+    NONE,
 }
 
 impl CPU {
@@ -59,14 +60,17 @@ impl CPU {
         // Opcodes are stored in 2 bytes
         let shifted_pc:u16 = (memory[self.pc] as u16) << 8;
         let opcode = shifted_pc | (memory[self.pc + 1] as u16);
-        //println!("{:#06x}", opcode); 
+        println!("{:#06x}", opcode); 
         if opcode == 0x00E0 {
             memory.clear_vram();
 
         }
         else if opcode == 0xEE {
             self.pop_pc_from_stack();
-            return;
+            /* We let it continue as we want to increment it to get
+             * the next instruction, remember that we stored PC at the time
+             * of the push
+             */
         }
 
         // Most of instructions, beside
@@ -91,11 +95,12 @@ impl CPU {
         match first_nibble {
             0x1 => {
                 self.pc = opcode & 0x0FFF;
-                return;
+                increment_type = PcIncrement::NONE;
             }
             0x2 => {
                 self.push_pc_to_stack();
                 self.pc = opcode & 0x0FFF;
+                increment_type = PcIncrement::NONE;
             },
             0x3 => {
                 let value = opcode & 0xFF;
@@ -124,8 +129,8 @@ impl CPU {
                 self.v[regs.2] = value;
             },
             0x7 => {
-                let value = (opcode & 0xFF) as u8;
-                self.v[regs.2] += value;
+                let value = opcode as u8;
+                self.v[regs.2] = self.v[regs.2].wrapping_add(value);
             },
             0x8 => {
                 CPU::execute_instr_op_8(&mut self.v, opcode);
@@ -145,6 +150,7 @@ impl CPU {
             },
             0xB => {
                 self.pc = (self.v[0x0] as u16) + (opcode & 0xFFF);
+                return;
             },
             0xC => {
                 let mut rng = rand::thread_rng();
@@ -168,6 +174,7 @@ impl CPU {
         match increment_type {
             PcIncrement::SINGLE => self.pc += 2,
             PcIncrement::SKIP => self.pc += 4,
+            PcIncrement::NONE => {},
         } 
     }
 
