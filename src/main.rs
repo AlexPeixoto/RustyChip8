@@ -21,7 +21,7 @@ fn main() {
     );
     let mut image = Image::new(64, 32);
 
-    let mut bus = Bus::new("/Users/alexcpeixoto/developer/ibm.ch8");
+    let mut bus = Bus::new("/Users/alexcpeixoto/developer/rand.ch8");
     let color = Color::rgb(0, 127, 0);
     let black = Color::rgb(9, 0, 0);
 

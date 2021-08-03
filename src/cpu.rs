@@ -317,14 +317,13 @@ impl CPU {
                 self.i = u16::from(self.v[reg]) * 5;
             },
             0x33 => {
-                let mem_pos = self.v[reg] as usize;
-                let mut val = self.v[mem_pos];
+                let mut val = self.v[reg];
                 /*
                  * Run in inverse order
                  * 156 should be stored, for example
                  * as 1, 5, 6 ON [2, 1, 0]
                  */
-                for idx in 2..0 {
+                for idx in (0..3).rev() {
                     let current_pos = (self.i + idx) as u16;
                     memory[current_pos] = val%10;
                     val = val/10;
