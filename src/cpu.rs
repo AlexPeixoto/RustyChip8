@@ -59,7 +59,7 @@ impl CPU {
         // Opcodes are stored in 2 bytes
         let shifted_pc:u16 = (memory[self.pc] as u16) << 8;
         let opcode = shifted_pc | (memory[self.pc + 1] as u16);
-        println!("{:#06x}", opcode); 
+        //println!("{:#06x}", opcode); 
         if opcode == 0x00E0 {
             memory.clear_vram();
 
@@ -182,7 +182,8 @@ impl CPU {
         self.v[0xF] = 0;
 
         for y in 0..height {
-            let byte = memory[self.i];
+            let byte = memory[self.i + y as u16];
+            //println!("byte pos: {:#06x}", self.i); 
             let pixel_vec = BitVec::from_bytes(&[byte]);
             let target_y = y + y_pos;
             for x in 0..8 {

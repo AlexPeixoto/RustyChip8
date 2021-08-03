@@ -23,7 +23,7 @@ fn main() {
 
     let mut bus = Bus::new("/Users/alexcpeixoto/developer/ibm.ch8");
     let color = Color::rgb(0, 127, 0);
-    let black = Color::rgb(127, 0, 0);
+    let black = Color::rgb(9, 0, 0);
 
     window.set_framerate_limit(60);
     window.set_size((1280, 640));
