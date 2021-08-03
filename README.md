@@ -16,5 +16,5 @@ Below are some images of it running
 
 ![Pong](https://github.com/AlexPeixoto/RustyChip8/blob/main/imgs/pong.jpeg)
 
-![Tests](https://github.com/AlexPeixoto/RustyChip8/iblob/main/imgs/tests.jpeg)
+![Tests](https://github.com/AlexPeixoto/RustyChip8/blob/main/imgs/tests.jpeg)
 
