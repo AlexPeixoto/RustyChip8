@@ -47,7 +47,7 @@ impl Bus{
         self.memory.get_full_vram()
     }
 
-    fn tickFrameTimer(&mut self) {
+    pub fn tickFrameTimer(&mut self) {
         if self.state.delay > 0 {
             self.state.delay = self.state.delay - 1;
         }
@@ -56,7 +56,7 @@ impl Bus{
         }
     }
 
-    fn tickFrameCPUGPU(&mut self) {
+    pub fn tickFrameCPU(&mut self) {
         if self.keyboard.was_any_key_pressed() && self.state.lock_until_pressed {
             self.state.lock_until_pressed = false;
         }
@@ -64,16 +64,10 @@ impl Bus{
         if self.state.lock_until_pressed {
             return;
         }
-        //for clocks per frame
+        //four clocks per frame
         //This looks ugly, needs to revisit this once I learn more about the language
         self.cpu.executeNextInstruction(&mut self.memory, &mut self.keyboard, &mut self.state);
-        //self.gpu.tick();
     } 
-
-    fn tickFrame(&mut self) {
-        self.tickFrameCPUGPU();
-        self.tickFrameTimer();
-    }
 }
 
 

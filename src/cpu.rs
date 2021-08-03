@@ -14,13 +14,16 @@ pub struct CPU {
     SP:u16,
     PC:u16,
 
-    //16 V registers
-    V: [u8; 0xF],
+    //16 V registers (The doc is confusing
+    //it states 0..F and talks about VF, so its 17
+    //to make things easier I will create 17 elements
+    //instead of 16
+    V: [u8; 0x10],
     //Single I register
     I: u16,
     //Stack in CHIP-8 is
     //limited to 16 elements
-    stack: [u16; 0xF],
+    stack: [u16; 0x10],
 }
 
 enum PCIncrement {
@@ -34,14 +37,14 @@ impl CPU {
         CPU{
             SP: 0,
             PC: 0,
-            V: [0; 0xF],
+            V: [0; 0x10],
             I: 0,
-            stack: [0; 0xF],
+            stack: [0; 0x10],
         }
     }
 
     fn getValFromOpCode(opCode : u16, pos : u8) -> usize {
-        (opCode >> (pos * 8) & 0xF) as usize
+        (opCode >> (pos * 4) & 0xF) as usize
     }
 
     fn pushPCtoStack(&mut self) {
@@ -56,7 +59,7 @@ impl CPU {
 
     pub fn executeNextInstruction(&mut self, memory: &mut MemoryMap, keyboard: &mut Keyboard, state: &mut BusState) {
         // Opcodes are stored in 2 bytes
-        let opCode = (memory[self.PC] << 8 | memory[self.PC + 1]) as u16;
+        let opCode = (memory[self.PC].checked_shl(8).unwrap_or(0) | memory[self.PC + 1]) as u16;
         if opCode == 0x00E0 {
             memory.clear_vram();
 
@@ -68,7 +71,8 @@ impl CPU {
         // Most of instructions, beside
         // the above ones can be defined
         // by its first byte.
-        let firstByte:u8 = (opCode >> 24) as u8;
+        // TODO FIX THIS, ITS NOT A BYTE, ITS A NIBBLE
+        let firstByte:u8 = (opCode >> 12) as u8;
 
         //TODO: This is ugly, remove this
         let reg_2 = self.V[CPU::getValFromOpCode(opCode, 2)];
@@ -161,7 +165,6 @@ impl CPU {
                 self.executeInstrOpF(&mut incrementType, opCode, memory, state);
             },
             _ => {
-                CPU::abort();
             }
         }
 
@@ -240,7 +243,7 @@ impl CPU {
         process::abort();
     }
 
-    fn executeInstrOp8(V: &mut [u8; 0xF], opCode:u16) {
+    fn executeInstrOp8(V: &mut [u8; 0x10], opCode:u16) {
         let op8 = CPU::getValFromOpCode(opCode, 0);
         let regs = (CPU::getValFromOpCode(opCode, 1),
         CPU::getValFromOpCode(opCode, 2));

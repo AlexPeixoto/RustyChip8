@@ -8,16 +8,17 @@ mod memory;
 mod keyboard;
 
 /*use sfml::{
-    audio::{Sound, SoundBuffer},
-    graphics::{
-        CircleShape, Color, Font, RectangleShape, RenderTarget, RenderWindow, Shape, Text,
-        Transformable,
-    },
-    system::{Clock, Time, Vector2f},
-    window::{ContextSettings, Event, Key, Style},
-};*/
+  audio::{Sound, SoundBuffer},
+  graphics::{
+  CircleShape, Color, Font, RectangleShape, RenderTarget, RenderWindow, Shape, Text,
+  Transformable,
+  },
+  system::{Clock, Time, Vector2f},
+  window::{ContextSettings, Event, Key, Style},
+  };*/
+use sfml::system::SfBox;
 use sfml::window::{ContextSettings, Event, Style};
-use sfml::graphics::{RenderWindow, Texture};
+use sfml::graphics::{Color, Image, RenderTarget, RenderWindow, Texture, Sprite};
 use crate::bus::Bus;
 
 fn main() {
@@ -29,8 +30,13 @@ fn main() {
         Style::CLOSE,
         &ContextSettings::default(),
     );
-    let mut texture = Texture::new(64, 32);
-    let bus = Bus::new("ibm.ch8");
+    let mut image = Image::new(64, 32);
+
+    let mut bus = Bus::new("ibm.ch8");
+    let color = Color::rgb(0, 127, 0);
+    let black = Color::rgb(0, 0, 0);
+
+    window.set_framerate_limit(60);
 
     while window.is_open() {
         while let Some(event) = window.poll_event() {
@@ -39,19 +45,27 @@ fn main() {
                 window.close();
             }
         }
-        let screen_updated = bus.was_screen_updated();
-        if screen_updated {
-            let vram = bus.get_vram();
+        for tick in 0..4 {
+            bus.tickFrameCPU();
+            let screen_updated = bus.was_screen_updated();
+            if screen_updated {
+                let vram = bus.get_vram();
+                for i in 0..32 {
+                    for j in 0..64 {
+                        if vram[(i, j)] {
+                            image.set_pixel(i as u32, j as u32, color);
+                        } else {
+                            image.set_pixel(i as u32, j as u32, black);
+                        }
+                    }
+                }
+            }
+            let texture = Texture::from_image(&image).unwrap();
+            let sprite = Sprite::with_texture(&texture);
+            window.set_active(true);
+            window.draw(&sprite); 
+            window.display();
         }
-        //window.set_active(true);
-        window.display();
+        bus.tickFrameTimer();
     }
-
-    /*let mut window = match RenderWindow::new(VideoMode::new_init(800, 600, 32),
-                                             
-                                             Style::CLOSE,
-                                             &ContextSettings::default()) {
-        Some(window) => window,
-        None => panic!("Cannot create a new Render Window.")
-    };*/
 }

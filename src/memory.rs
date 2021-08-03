@@ -61,13 +61,13 @@ impl MemoryMap {
             memory: [0; 0xFFF],
             //To preserve X, Y, "order" the matrix
             //is "inverted", just to avoid confusion later
-            vram: BitMatrix::new(64, 42),
+            vram: BitMatrix::new(64, 32),
             vram_changed: false,
             rom_name: rom_name.to_owned(),
         };
 
-        for i in 0..32 {
-            for j in 0..64 {
+        for i in 0..64 {
+            for j in 0..32 {
                 to_ret.vram.set((i, j), false);
             }
         }
