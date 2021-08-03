@@ -34,6 +34,7 @@ impl Bus{
                 delay: 0,
                 sound: 0,
                 lock_until_pressed: false,
+                write_to: 0x0,
             },
         }
     }
@@ -58,6 +59,9 @@ impl Bus{
     pub fn tick_frame_cpu(&mut self) {
         if self.keyboard.was_any_key_pressed() && self.state.lock_until_pressed {
             self.state.lock_until_pressed = false;
+
+            let last_key_pressed = self.keyboard.get_last_pressed_key();
+            self.cpu.write_key_to(self.state.write_to as usize, last_key_pressed);
         }
                     
         if self.state.lock_until_pressed {

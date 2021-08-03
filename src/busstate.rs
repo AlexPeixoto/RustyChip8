@@ -4,6 +4,7 @@ pub struct BusState{
     //Beeps if not 8
     pub sound:u8,
     
+    pub write_to: u8,
     //stops processing until a key is pressed
     pub lock_until_pressed: bool,
 }

@@ -52,25 +52,22 @@ impl CPU {
     }
 
     fn pop_pc_from_stack(&mut self) {
-        self.pc = self.stack[self.sp as usize];
         self.sp -= 1;
+        self.pc = self.stack[self.sp as usize];
     }
 
     pub fn execute_next_instruction(&mut self, memory: &mut MemoryMap, keyboard: &mut Keyboard, state: &mut BusState) {
         // Opcodes are stored in 2 bytes
         let shifted_pc:u16 = (memory[self.pc] as u16) << 8;
         let opcode = shifted_pc | (memory[self.pc + 1] as u16);
-        println!("{:#06x}", opcode); 
         if opcode == 0x00E0 {
             memory.clear_vram();
 
         }
         else if opcode == 0xEE {
             self.pop_pc_from_stack();
-            /* We let it continue as we want to increment it to get
-             * the next instruction, remember that we stored PC at the time
-             * of the push
-             */
+            self.pc += 2;
+            return;
         }
 
         // Most of instructions, beside
@@ -129,7 +126,7 @@ impl CPU {
                 self.v[regs.2] = value;
             },
             0x7 => {
-                let value = opcode as u8;
+                let value = (opcode & 0xFF) as u8;
                 self.v[regs.2] = self.v[regs.2].wrapping_add(value);
             },
             0x8 => {
@@ -190,7 +187,6 @@ impl CPU {
 
         for y in 0..height {
             let byte = memory[self.i + y as u16];
-            //println!("byte pos: {:#06x}", self.i); 
             let pixel_vec = BitVec::from_bytes(&[byte]);
             let target_y = y + y_pos;
             for x in 0..8 {
@@ -198,7 +194,7 @@ impl CPU {
                 let target_x = x + x_pos;
                 // We only warp at the start (we break the loop and
                 // avoid warp here.
-                if target_x >= 64 {
+                if target_x >= 64 || target_y >= 32 {
                     break
                 }
 
@@ -248,21 +244,21 @@ impl CPU {
 
     fn execute_instr_op_8(v: &mut [u8; 0x10], opcode:u16) {
         let op8 = CPU::get_val_from_opcode(opcode, 0);
-        let regs = (CPU::get_val_from_opcode(opcode, 1),
-        CPU::get_val_from_opcode(opcode, 2));
+        let regs = (CPU::get_val_from_opcode(opcode, 2),
+        CPU::get_val_from_opcode(opcode, 1));
         match op8 {
             0x0 => v[regs.0] = v[regs.1],
             0x1 => v[regs.0] = v[regs.0] | v[regs.1],
             0x2 => v[regs.0] = v[regs.0] & v[regs.1],
             0x3 => v[regs.0] = v[regs.0] ^ v[regs.1],
             0x4 => {
-                let tmp_sum = (v[regs.0] + v[regs.1]) as u16;
+                let tmp_sum = (v[regs.0] as u16 + v[regs.1] as u16) as u16;
                 v[0xF] = (tmp_sum > 0xFF) as u8;
                 v[regs.0] = tmp_sum as u8;
             },
             0x5 => {
                 v[0xF] = (v[regs.0] > v[regs.1]) as u8;
-                v[regs.0] = v[regs.0] - v[regs.1];
+                v[regs.0] = v[regs.0].wrapping_sub(v[regs.1]);
             },
             0x6 => {
                 v[0xF] = (v[regs.0] & 0x1) as u8;
@@ -270,7 +266,7 @@ impl CPU {
             },
             0x7 => {
                 v[0xF] = (v[regs.1] > v[regs.0]) as u8;
-                v[regs.0] = v[regs.1] - v[regs.0];
+                v[regs.1] = v[regs.1].wrapping_sub(v[regs.0]);
             },
             /* No 0x8..0xC */
             0xE => {
@@ -278,7 +274,6 @@ impl CPU {
                 v[regs.0] = v[regs.0] << 1;
             },
             _ => {
-                println!("Invalid instruction");
                 process::abort();
             }
         }
@@ -309,14 +304,17 @@ impl CPU {
         let sub_op_code = opcode & 0xFF;
         let reg = CPU::get_val_from_opcode(opcode, 2);
         match sub_op_code {
-            0x07 =>  self.v[reg] = state.delay,
-            0x0A => state.lock_until_pressed = true,
+            0x07 => self.v[reg] = state.delay,
+            0x0A => {
+                state.lock_until_pressed = true;
+                state.write_to = reg as u8;
+            },
             0x15 => state.delay = self.v[reg],
             0x18 => state.sound = self.v[reg],
             0x1E => {
                 let tmp_sum = (u16::from(self.v[reg]) + self.i) as u16;
                 self.v[0xF] = (tmp_sum > 0xFFF) as u8;
-                self.i = tmp_sum;
+                self.i = tmp_sum & 0xFFF;
             },
             0x29 => {
                 //The opcode contains the memory location for the index of the char
@@ -341,13 +339,15 @@ impl CPU {
                  * The interpreter copies the values of registers V0 through Vx into memory,
                  * starting at the address in I.
                  */
-                for idx in 0x0..0xF {
+                let limit:u16 = reg as u16 + 1;
+                for idx in 0x0..limit {
                     let current_pos = (self.i + idx) as u16;
                     memory[current_pos] = self.v[idx as usize];
                 }
             },
             0x65 => {
-                for idx in 0x0..0xF {
+                let limit:u16 = reg as u16 + 1;
+                for idx in 0x0..limit {
                     let current_pos = (self.i + idx) as u16;
                     self.v[idx as usize] = memory[current_pos];
                 }
@@ -357,5 +357,9 @@ impl CPU {
                 CPU::abort();
             }
         }
+    }
+
+    pub fn write_key_to(&mut self, reg: usize, key: u8) {
+        self.v[reg] = key;
     }
 }

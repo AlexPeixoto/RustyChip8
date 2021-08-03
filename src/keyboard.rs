@@ -1,22 +1,21 @@
 pub struct Keyboard {
-    keys: [State; 0xF],
-
+    keys: [State; 0x10],
+    last_pressed_key: u8,
     key_pressed: bool,
 }
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum State{
     PRESSED,
-    HELD,
     RELEASED,
-    NOTPRESSED,
 }
 
 impl Keyboard{
     pub fn new() -> Keyboard {
         Keyboard {
-            keys: [State::NOTPRESSED; 0xF],
+            keys: [State::RELEASED; 0x10],
             key_pressed: false,
+            last_pressed_key: 0,
         }
     }
     pub fn reset_key_press(&mut self) {
@@ -27,16 +26,9 @@ impl Keyboard{
         if state == State::PRESSED {
             self.key_pressed = true;
         }
-
-        if self.keys[key] == State::PRESSED || self.keys[key] == State::HELD {
-            if state == State::PRESSED {
-                self.keys[key] = State::HELD;
-            } else {
-                self.keys[key] = State::RELEASED;
-            }
-        } else {
-            self.keys[key] = state; // No need to have specific transitions
-        }
+        
+        self.last_pressed_key = key as u8;
+        self.keys[key] = state;
     }
 
     pub fn was_any_key_pressed(&mut self) -> bool {
@@ -45,5 +37,9 @@ impl Keyboard{
 
     pub fn is_key_pressed(&mut self, key: usize) -> bool {
         self.keys[key] == State::PRESSED
+    }
+
+    pub fn get_last_pressed_key(&mut self) -> u8 {
+        self.last_pressed_key
     }
 }
