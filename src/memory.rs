@@ -72,6 +72,8 @@ impl MemoryMap {
             }
         }
 
+        to_ret.init_font();
+        to_ret.load_rom();
         to_ret
     }
 
@@ -99,16 +101,12 @@ impl MemoryMap {
         }
     }
 
-    fn load_rom(&mut self, filename: &str) {
+    fn load_rom(&mut self) {
         let slice = &mut self.memory[0x200..0xFFF];
 
-        let mut rom = File::open(&filename).expect("Could not open file");
-        let metadata = fs::metadata(&filename).expect("unable to read metadata");
+        let mut rom = File::open(&self.rom_name).expect("Could not open file");
 
-        //let instructions_count = metadata.len()/2;
-
-        rom.read(&mut slice[..]);
-        //rom.read(&mut slice[..]).unwrap();
+        rom.read(&mut slice[..]).expect("Failed to load rom data");
     }
 
     pub fn get_vram(&mut self, x: usize, y: usize) -> bool {
@@ -132,8 +130,8 @@ impl MemoryMap {
     }
 
     pub fn clear_vram(&mut self) {
-        for i in 0..32 {
-            for j in 0..64 {
+        for i in 0..64 {
+            for j in 0..32 {
                 self.vram.set((i, j), false);
             }
         }

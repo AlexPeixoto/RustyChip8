@@ -36,7 +36,7 @@ impl CPU {
     pub fn new() -> CPU {
         CPU{
             SP: 0,
-            PC: 0,
+            PC: 0x200,
             V: [0; 0x10],
             I: 0,
             stack: [0; 0x10],
@@ -66,16 +66,20 @@ impl CPU {
         }
         else if opCode == 0xEE {
             self.popPCfromStack();
+            return;
         }
 
         // Most of instructions, beside
         // the above ones can be defined
         // by its first byte.
-        // TODO FIX THIS, ITS NOT A BYTE, ITS A NIBBLE
-        let firstByte:u8 = (opCode >> 12) as u8;
+        let first_nibble:u8 = (opCode >> 12) as u8;
+        /* Its quite common to have the 2nd nibble as
+         * a V[x], so to make the code cleaner I do it here
+         */
+        let regs = (CPU::getValFromOpCode(opCode, 0),
+                    CPU::getValFromOpCode(opCode, 1),
+                    CPU::getValFromOpCode(opCode, 2));
 
-        //TODO: This is ugly, remove this
-        let reg_2 = self.V[CPU::getValFromOpCode(opCode, 2)];
         let mut incrementType = PCIncrement::SINGLE;
 
         // I can probably do a expression-oriented style
@@ -84,7 +88,7 @@ impl CPU {
         // where each one is inside a function
         // Another solution would be to have a "function match" array, like on my GB emulator
         // But I avoided it just to do things differently here.
-        match firstByte {
+        match first_nibble {
             0x1 => self.PC = opCode & 0x0FFF,
             0x2 => {
                 self.pushPCtoStack();
@@ -92,13 +96,13 @@ impl CPU {
             },
             0x3 => {
                 let value = opCode & 0xFF;
-                if u16::from(reg_2) == value {
+                if u16::from(self.V[regs.2]) == value {
                     incrementType = PCIncrement::SKIP;
                 }
             },
             0x4 => {
                 let value = (opCode & 0xFF) as u8;
-                if reg_2 != value {
+                if self.V[regs.2] != value {
                     incrementType = PCIncrement::SKIP;
                 }
             },
@@ -108,21 +112,17 @@ impl CPU {
                     CPU::abort();
                 }
 
-                let regs = (CPU::getValFromOpCode(opCode, 1),
-                CPU::getValFromOpCode(opCode, 2));
-                if self.V[regs.0] == self.V[regs.1] {
+                if self.V[regs.1] == self.V[regs.2] {
                     incrementType = PCIncrement::SKIP;
                 }
             },
             0x6 => {
-                let reg = CPU::getValFromOpCode(opCode, 2);
                 let value = (opCode & 0xFF) as u8;
-                self.V[reg] = value;
+                self.V[regs.2] = value;
             },
             0x7 => {
-                let reg = CPU::getValFromOpCode(opCode, 2);
                 let value = (opCode & 0xFF) as u8;
-                self.V[reg] += value;
+                self.V[regs.2] += value;
             },
             0x8 => {
                 CPU::executeInstrOp8(&mut self.V, opCode);
@@ -133,9 +133,7 @@ impl CPU {
                     CPU::abort();
                 }
 
-                let regs = (CPU::getValFromOpCode(opCode, 1),
-                CPU::getValFromOpCode(opCode, 2));
-                if self.V[regs.0] != self.V[regs.1] {
+                if self.V[regs.1] != self.V[regs.2] {
                     incrementType = PCIncrement::SKIP;
                 }
             },
@@ -146,17 +144,12 @@ impl CPU {
                 self.PC = (self.V[0x0] as u16) + (opCode & 0xFFF);
             },
             0xC => {
-                let reg = CPU::getValFromOpCode(opCode, 2);
                 let mut rng = rand::thread_rng();
                 let val:u8 = rng.gen();
-                self.V[reg] = val & (opCode & 0xFF) as u8;
+                self.V[regs.2] = val & (opCode & 0xFF) as u8;
             },
             0xD => {
-                self.renderSpritesXY(
-                    CPU::getValFromOpCode(opCode, 2),
-                    CPU::getValFromOpCode(opCode, 1),
-                    CPU::getValFromOpCode(opCode, 0),
-                    memory);
+                self.renderSpritesXY(regs.2, regs.1, regs.0, memory);
             },
             0xE => {
                 self.executeInstrOpE(&mut incrementType, opCode, keyboard);
