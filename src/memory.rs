@@ -107,7 +107,7 @@ impl MemoryMap {
         rom.read(&mut slice[..]).expect("Failed to load rom data");
     }
 
-    pub fn get_vram(&mut self, x: usize, y: usize) -> bool {
+    pub fn get_vram(&self, x: usize, y: usize) -> bool {
         self.vram[(x, y)]
     }
 
