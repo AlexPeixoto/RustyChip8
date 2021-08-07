@@ -2,7 +2,7 @@
 CHIP-8 emulator written in rust
 
 
-This is my very first RUST project and it probably beaks a lot of expectations from what a good RUST code would look like.
+This is my very first RUST project and it probably breaks a lot of expectations from what a good RUST code would look like.
 So it was used as a learning opportunity (this was literally my hello world).
 
 I still want to go back and reorder some stuff on the code, move around a little bit of the code and do some cleanup as I feel that I
