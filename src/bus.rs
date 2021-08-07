@@ -43,7 +43,7 @@ impl Bus{
         self.memory.was_screen_updated()
     }
 
-    pub fn get_vram(&self) -> BitMatrix {
+    pub fn get_vram(&self) -> &BitMatrix {
         self.memory.get_full_vram()
     }
 

@@ -48,11 +48,6 @@ fn main() {
         }
         let screen_updated = bus.was_screen_updated();
         if screen_updated {
-	    // This is plain bad, it lones
-	    // The vram at each screen update
-	    // I can actually have get_vram_at
-	    // Still not a huge problem as its super small (256 bytes).
-	    // Still will improve that in the future.
             let vram = bus.get_vram();
             for i in 0..64 {
                 for j in 0..32 {

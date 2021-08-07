@@ -111,8 +111,8 @@ impl MemoryMap {
         self.vram[(x, y)]
     }
 
-    pub fn get_full_vram(&self) -> BitMatrix {
-        self.vram.clone()
+    pub fn get_full_vram(&self) -> &BitMatrix {
+        &self.vram
     }
 
     pub fn set_vram(&mut self, x: usize, y: usize, set: bool) {
